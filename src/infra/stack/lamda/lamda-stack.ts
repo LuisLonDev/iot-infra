@@ -1,17 +1,30 @@
 import { Stack, StackProps } from 'aws-cdk-lib'
-import { Code, Function as LambdaFunction, Runtime} from 'aws-cdk-lib/aws-lambda'
+import { WebSocketLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam'
+import { Runtime} from 'aws-cdk-lib/aws-lambda'
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Construct } from 'constructs'
 import { join } from 'path'
 
+export class LambdaStack extends Stack{
 
-export class  LambdaStack extends Stack{
+    public readonly lambdaIntegration: WebSocketLambdaIntegration;
+
     constructor(scope: Construct, id: string, props?: StackProps){
         super(scope, id, props)
 
-        new LambdaFunction(this, 'helloLambda', {
+        const sendIotPayload = new NodejsFunction(this, 'sendIotPayload', {
             runtime: Runtime.NODEJS_20_X,
-            handler: 'hello.main',
-            code: Code.fromAsset(join(__dirname, '..', '..', '..', 'service'))
+            handler: 'handler',
+            entry: (join(__dirname, '..', '..', '..', 'service', 'sendIotPayload.ts'))
         })
+
+        sendIotPayload.addToRolePolicy(new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: ['*'], // TODO: refine access policies
+            resources: ['*']
+        }))
+
+        this.lambdaIntegration = new WebSocketLambdaIntegration(id,sendIotPayload)
     }
 }
