@@ -1,10 +1,11 @@
 import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
-import { WebSocketApi, WebSocketStage } from 'aws-cdk-lib/aws-apigatewayv2';
-import { WebSocketLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import { HttpApi, HttpMethod, WebSocketApi, WebSocketStage } from 'aws-cdk-lib/aws-apigatewayv2';
+import { WebSocketLambdaIntegration, HttpLambdaIntegration  } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Construct } from 'constructs';
 
 export interface ApiGatewayStackProps extends StackProps {
-    lambdaFunction: WebSocketLambdaIntegration
+    websocketLambdaFunction: WebSocketLambdaIntegration,
+    thingCreationLambdaFunction: HttpLambdaIntegration
 }
 
 export class ApiGatewayStack extends Stack {
@@ -12,32 +13,47 @@ export class ApiGatewayStack extends Stack {
     super(scope, id, props);
 
     // Define the WebSocket API
-    const webSocketApi = new WebSocketApi(this, 'MyWebSocketApi', {
+    const webSocketApi = new WebSocketApi(this, 'WebSocketApi', {
       connectRouteOptions: {
-        integration: props.lambdaFunction,
+        integration: props.websocketLambdaFunction,
       },
       disconnectRouteOptions: {
-        integration: props.lambdaFunction,
+        integration: props.websocketLambdaFunction,
       },
       defaultRouteOptions: {
-        integration: props.lambdaFunction,
+        integration: props.websocketLambdaFunction,
       },
     });
 
     webSocketApi.addRoute('messages', {
-      integration: props.lambdaFunction,
+      integration: props.websocketLambdaFunction,
     })
 
     // Create a stage for the WebSocket API
-    new WebSocketStage(this, 'MyWebSocketStage', {
+    new WebSocketStage(this, 'WebSocketStage', {
       webSocketApi,
       stageName: 'dev',
       autoDeploy: true,
     });
 
+    const httpApi = new HttpApi(this, 'ThingCreationAPI', {
+      apiName: 'ThingCreationApi',
+    })
+
+    httpApi.addRoutes({
+      path:'/create-thing',
+      integration: props.thingCreationLambdaFunction,
+      methods: [HttpMethod.POST],
+    })
+
     // Output the WebSocket API URL
     new CfnOutput(this, 'WebSocketApiUrl', {
       value: webSocketApi.apiEndpoint,
+    });
+
+    // Output the HttP API URL
+    new CfnOutput(this, 'HttpApiEndpointUrl', {
+      value: httpApi.url || '',
     });
   }
 }

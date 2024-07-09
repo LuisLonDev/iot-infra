@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyWebsocketEventV2, Context } from "aws-lambda";
+import { APIGatewayProxyWebsocketEventV2, Context } from "aws-lambda";
 
 async function handler(event: APIGatewayProxyWebsocketEventV2, context: Context ) {
     console.log("request:", JSON.stringify(event, undefined, 2));
