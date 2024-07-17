@@ -22,7 +22,10 @@
     "typescript": "~5.4.5"
   },
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.614.0",
+    "@aws-sdk/client-dynamodb": "^3.614.0",
     "@aws-sdk/client-iot": "^3.609.0",
+    "@aws-sdk/client-iot-data-plane": "^3.614.0",
     "aws-cdk-lib": "2.147.2",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"

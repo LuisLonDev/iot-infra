@@ -4,7 +4,9 @@ import { WebSocketLambdaIntegration, HttpLambdaIntegration  } from 'aws-cdk-lib/
 import { Construct } from 'constructs';
 
 export interface ApiGatewayStackProps extends StackProps {
-    websocketLambdaFunction: WebSocketLambdaIntegration,
+  websocketConnectLambdaFunction:WebSocketLambdaIntegration,
+  websocketDisconnectLambdaFunction: WebSocketLambdaIntegration,
+    websocketSendIotPayloadLambdaFunction: WebSocketLambdaIntegration,
     thingCreationLambdaFunction: HttpLambdaIntegration
 }
 
@@ -15,18 +17,15 @@ export class ApiGatewayStack extends Stack {
     // Define the WebSocket API
     const webSocketApi = new WebSocketApi(this, 'WebSocketApi', {
       connectRouteOptions: {
-        integration: props.websocketLambdaFunction,
+        integration: props.websocketConnectLambdaFunction,
       },
       disconnectRouteOptions: {
-        integration: props.websocketLambdaFunction,
-      },
-      defaultRouteOptions: {
-        integration: props.websocketLambdaFunction,
+        integration: props.websocketDisconnectLambdaFunction,
       },
     });
 
     webSocketApi.addRoute('messages', {
-      integration: props.websocketLambdaFunction,
+      integration: props.websocketSendIotPayloadLambdaFunction,
     })
 
     // Create a stage for the WebSocket API

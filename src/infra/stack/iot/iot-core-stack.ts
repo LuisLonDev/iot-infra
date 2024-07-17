@@ -37,7 +37,7 @@ export class IotCoreStack extends Stack {
       },
     });
 
-    const rule = new CfnTopicRule(this, "DataIngestionIotRule", {
+    const dataIngestionRule = new CfnTopicRule(this, "DataIngestionIotRule", {
       ruleName: "DataIngestionIotRule",
       topicRulePayload: {
         sql: "SELECT * FROM 'iot/dataIngestion'",
@@ -45,7 +45,7 @@ export class IotCoreStack extends Stack {
         actions: [
           {
             timestream: {
-              databaseName: "iotDB", //for some reason the refs aren't working, hardcoding values instead 
+              databaseName: "iotDB", //for some reason the refs aren't working, hardcoding values instead
               tableName: "measurements",
               roleArn: role.roleArn,
               dimensions: [
@@ -61,6 +61,25 @@ export class IotCoreStack extends Stack {
             },
           },
         ],
+      },
+    });
+
+    const sendDataToCloudwatchRule = new CfnTopicRule(this, "ConnectivityToCloudWatchRule", {
+      ruleName: "ConnectivityToCloudWatchRule",
+      topicRulePayload: {
+        sql: "SELECT state.reported.connectivity.connected AS connected FROM '$aws/things/+/shadow/update/accepted'",
+        actions: [
+          {
+            cloudwatchMetric: {
+              metricName: "ThingConnectivity",
+              metricNamespace: "IoTConnectivity",
+              metricValue: "${connected}",
+              roleArn: "arn:aws:iam::your-account-id:role/your-iot-role",
+              metricUnit: "boolean",
+            },
+          },
+        ],
+        ruleDisabled: false,
       },
     });
   }
